@@ -1,0 +1,9 @@
+# Tasks
+1. How finely categorized is each category?
+2. How broadly categorized is each category?
+3. How many products/subproducts/product categories total are in each category?
+4. By using a node's detailed view, what is the lowest common ancestor of each of it's "alsos"? Also what is the lowest common ancestor of _all_ the "alsos"?
+5. Can we clean up the categories by removing multiple copies of products and leave only the finest categorization (eg. the one with the longest path)? This involves comparing the distance to the common ancestor from the current category and each of its "alsos". We can then take the longest distance as the most specific.
+6. Can we identify places to improve product categorization? We can compare the productCount to the subtreeProductCount to try and discover whether products in the current category may be poorly categorized or not categorized finely enough.
+7. Say Amazon wants to clean up its catalogue. They try to find categories where products are not "well-placed". To be well-placed, a product most not be in a top-level/brief category. That is, placing a produt in the "Household Items" does not significantly clarify what it is. So we can look at each node, figure out the difference between the number of leaf products in that category and subcategories. This number could suggest the product is not well-placed. We can do two different things to resolve this. Either the product is also present in other categories where it may be well placed. In this case, see 5. Otherwise, it's likely that the product needs to be placed into a finer categorization manually and we also need to remove the previous/redundant chain of categories.
+8. Two major domain problems. We can help the customer explore the tree interactively with summarization. The second is to help an analyst clean up the catalogue (see 7).
