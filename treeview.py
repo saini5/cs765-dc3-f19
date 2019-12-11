@@ -3,6 +3,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import pickle
 from tree import getNodeList
+from gtkcss import set_gtk_style
 
 file = open('tree-all.pickle', 'rb')
 tree = pickle.load(file)
@@ -69,6 +70,7 @@ class TreeViewFilterWindow(Gtk.Window):
     self.treeview.columns_autosize()
     self.treeview.set_enable_search(True)
     self.treeview.set_enable_tree_lines(True)
+    self.treeview.set_show_expanders(True)
 
     # Create the columns for the TreeView
     cats = ["Name", "Product Count", "Subtree Product Count"]
@@ -84,8 +86,8 @@ class TreeViewFilterWindow(Gtk.Window):
     self.buttons = list()
     for prog_language in ["Java", "C", "C++", "Python", "None"]:
       button = Gtk.Button(prog_language)
-    self.buttons.append(button)
-    button.connect("clicked", self.on_selection_button_clicked)
+      self.buttons.append(button)
+      button.connect("clicked", self.on_selection_button_clicked)
 
     # setting up the layout, putting the treeview in a scrollwindow,
     # and the buttons in a row
@@ -97,11 +99,12 @@ class TreeViewFilterWindow(Gtk.Window):
     self.scrollable_treelist.add(self.treeview)
 
     self.detail_grid.attach(self.buttons[0],
-                            0, 0, 20, 20)
-    # for i, button in enumerate(self.buttons[1:]):
-    #   self.grid.attach_next_to(button, self.buttons[i],
-    #                            Gtk.PositionType.RIGHT, 1, 1)
+                            0, 0, 2, 2)
+    for i, button in enumerate(self.buttons[1:]):
+      self.detail_grid.attach_next_to(button, self.buttons[i],
+                                      Gtk.PositionType.RIGHT, 1, 1)
 
+    # self.treeview.expand_all() # Uncomment to expand the tree initially
     self.show_all()
 
   def language_filter_func(self, model, iter, data):
@@ -121,6 +124,7 @@ class TreeViewFilterWindow(Gtk.Window):
     self.language_filter.refilter()
 
 
+set_gtk_style("treeview.css")
 win = TreeViewFilterWindow()
 win.connect("destroy", Gtk.main_quit)
 win.show_all()
