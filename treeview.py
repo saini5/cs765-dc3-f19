@@ -8,18 +8,6 @@ from gtkcss import set_gtk_style
 file = open('tree-all.pickle', 'rb')
 tree = pickle.load(file)
 
-software_list = [("Firefox", 2002, "C++"),
-                 ("Eclipse", 2004, "Java"),
-                 ("Pitivi", 2004, "Python"),
-                 ("Netbeans", 1996, "Java"),
-                 ("Chrome", 2008, "C++"),
-                 ("Filezilla", 2001, "C++"),
-                 ("Bazaar", 2005, "Python"),
-                 ("Git", 2005, "C"),
-                 ("Linux Kernel", 1991, "C"),
-                 ("GCC", 1987, "C"),
-                 ("Frostwire", 2004, "Java")]
-
 
 class TreeViewFilterWindow(Gtk.Window):
 
@@ -36,8 +24,6 @@ class TreeViewFilterWindow(Gtk.Window):
     self.add(self.paned)
 
     self.detail_list = Gtk.ListBox()
-    # self.detail_list.set_column_homogeneous(True)
-    # self.detail_list.set_row_homogeneous(True)
     self.paned.add2(self.detail_list)
 
     # Creating the TreeStore model
@@ -67,6 +53,7 @@ class TreeViewFilterWindow(Gtk.Window):
     self.language_filter = self.treestore.filter_new()
     # # setting the filter function, note that we're not using the
     self.language_filter.set_visible_func(self.language_filter_func)
+    self.treestore.set_sort_func(0, self.compare, None)
 
     # creating the treeview, making it use the filter as a model,
     # and adding the columns
@@ -75,22 +62,24 @@ class TreeViewFilterWindow(Gtk.Window):
     self.treeview.set_enable_search(True)
     self.treeview.set_enable_tree_lines(True)
     self.treeview.set_show_expanders(True)
+    self.treeview.connect("row_activated", self.on_selection_button_clicked)
 
     # Create the columns for the TreeView
     cats = ["Name (# subcategories)", "Product Count", "Subtree Product Count"]
     for i, column_title in enumerate(cats):
       renderer = Gtk.CellRendererText()
       column = Gtk.TreeViewColumn(column_title, renderer, text=i)
+      column.set_sort_column_id(i)
       self.treeview.append_column(column)
       if i == 0:
         self.treeview.set_expander_column(column)
 
     # creating buttons to filter by programming language,
     # and setting up their events
-    self.buttons = list()
-    for prog_language in ["Java", "C", "C++", "Python", "None"]:
-      button = Gtk.Label.new(prog_language)
-      self.buttons.append(button)
+    # self.buttons = list()
+    # for prog_language in ["Java", "C", "C++", "Python", "None"]:
+    #   button = Gtk.Label.new(prog_language)
+    #   self.buttons.append(button)
       # button.connect("clicked", self.on_selection_button_clicked)
 
     # setting up the layout, putting the treeview in a scrollwindow,
@@ -121,13 +110,29 @@ class TreeViewFilterWindow(Gtk.Window):
     else:
       return model[iter][2] == self.current_filter_language
 
-  def on_selection_button_clicked(self, widget):
+  def on_selection_button_clicked(self, tree_view, path, column):
     """Called on any of the button clicks"""
     # we set the current language filter to the button's label
-    self.current_filter_language = widget.get_label()
+    print("HELLO THERE")
+    # self.current_filter_language = widget.get_label()
     print("%s language selected!" % self.current_filter_language)
     # we update the filter, which updates in turn the view
     self.language_filter.refilter()
+
+  def compare(self, model, row1, row2, user_data):
+    sort_column, _ = model.get_sort_column_id()
+    value1 = model.get_value(row1, sort_column)
+    value2 = model.get_value(row2, sort_column)
+    if isinstance(value1, int):
+      value1 = int(value1)
+      value2 = int(value2)
+
+    if value1 < value2:
+        return -1
+    elif value1 == value2:
+        return 0
+    else:
+        return 1
 
   def build_row(self, left_text, right_text):
     row = Gtk.Box(spacing=10)
