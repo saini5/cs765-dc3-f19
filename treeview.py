@@ -35,13 +35,13 @@ class TreeViewFilterWindow(Gtk.Window):
     # self.add(self.grid)
     self.add(self.paned)
 
-    self.detail_grid = Gtk.Grid()
-    self.detail_grid.set_column_homogeneous(True)
-    self.detail_grid.set_row_homogeneous(True)
-    self.paned.add2(self.detail_grid)
+    self.detail_list = Gtk.ListBox()
+    # self.detail_list.set_column_homogeneous(True)
+    # self.detail_list.set_row_homogeneous(True)
+    self.paned.add2(self.detail_list)
 
     # Creating the TreeStore model
-    self.software_treestore = Gtk.TreeStore(str, int, int)
+    self.treestore = Gtk.TreeStore(str, int, int)
 
     allNodes = getNodeList(tree)
     parents = {}
@@ -50,30 +50,34 @@ class TreeViewFilterWindow(Gtk.Window):
       parentName = None
       if node.parent is not None:
         parentName = node.parent.name
-      attrs = [node.name, node.productCount, node.subtreeProductCount]
+      numChildren = ""
+      if len(node.children) > 0:
+        numChildren = " (" + str(len(node.children)) + ")"
+      namePlusBranch = node.name + numChildren
+      attrs = [namePlusBranch, node.productCount, node.subtreeProductCount]
       parentObj = parents[parentName]
       # print(node.path)
       # print(node.name)
       # print(node.productCount)
-      parents[node.name] = self.software_treestore.append(parentObj, attrs)
+      parents[node.name] = self.treestore.append(parentObj, attrs)
 
     self.current_filter_language = None
 
     # Creating the filter, feeding it with the treestore model
-    self.language_filter = self.software_treestore.filter_new()
+    self.language_filter = self.treestore.filter_new()
     # # setting the filter function, note that we're not using the
     self.language_filter.set_visible_func(self.language_filter_func)
 
     # creating the treeview, making it use the filter as a model,
     # and adding the columns
-    self.treeview = Gtk.TreeView.new_with_model(self.software_treestore)
+    self.treeview = Gtk.TreeView.new_with_model(self.treestore)
     self.treeview.columns_autosize()
     self.treeview.set_enable_search(True)
     self.treeview.set_enable_tree_lines(True)
     self.treeview.set_show_expanders(True)
 
     # Create the columns for the TreeView
-    cats = ["Name", "Product Count", "Subtree Product Count"]
+    cats = ["Name (# subcategories)", "Product Count", "Subtree Product Count"]
     for i, column_title in enumerate(cats):
       renderer = Gtk.CellRendererText()
       column = Gtk.TreeViewColumn(column_title, renderer, text=i)
@@ -85,24 +89,26 @@ class TreeViewFilterWindow(Gtk.Window):
     # and setting up their events
     self.buttons = list()
     for prog_language in ["Java", "C", "C++", "Python", "None"]:
-      button = Gtk.Button(prog_language)
+      button = Gtk.Label.new(prog_language)
       self.buttons.append(button)
-      button.connect("clicked", self.on_selection_button_clicked)
+      # button.connect("clicked", self.on_selection_button_clicked)
 
     # setting up the layout, putting the treeview in a scrollwindow,
     # and the buttons in a row
     self.scrollable_treelist = Gtk.ScrolledWindow()
     self.scrollable_treelist.set_vexpand(True)
-    self.scrollable_treelist.set_hexpand(False)
+    self.scrollable_treelist.set_hexpand(True)
 
     self.paned.add1(self.scrollable_treelist)
     self.scrollable_treelist.add(self.treeview)
 
-    self.detail_grid.attach(self.buttons[0],
-                            0, 0, 2, 2)
-    for i, button in enumerate(self.buttons[1:]):
-      self.detail_grid.attach_next_to(button, self.buttons[i],
-                                      Gtk.PositionType.RIGHT, 1, 1)
+    # TODO: Add the data rows & track the right-labels for editting
+    # on selection
+    detail_view_header = Gtk.Label.new()
+    detail_view_header.set_markup("<big><b>Details</b></big>")
+    self.detail_list.add(detail_view_header)
+    self.row = self.build_row("hello", "my baby")
+    self.detail_list.add(self.row)
 
     # self.treeview.expand_all() # Uncomment to expand the tree initially
     self.show_all()
@@ -123,8 +129,19 @@ class TreeViewFilterWindow(Gtk.Window):
     # we update the filter, which updates in turn the view
     self.language_filter.refilter()
 
+  def build_row(self, left_text, right_text):
+    row = Gtk.Box(spacing=10)
+    row.set_homogeneous(False)
 
-set_gtk_style("treeview.css")
+    left = Gtk.Label.new(left_text)
+    right = Gtk.Label.new(right_text)
+    row.pack_start(left, True, True, 0)
+    row.pack_start(right, True, True, 0)
+
+    return row
+
+
+set_gtk_style("treeview.css")  # Load the css file
 win = TreeViewFilterWindow()
 win.connect("destroy", Gtk.main_quit)
 win.show_all()
