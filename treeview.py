@@ -52,6 +52,9 @@ class TreeViewFilterWindow(Gtk.Window):
       parents[node] = treestoreiter
       treestoreiterNamewithBracket = self.treestore.get_value(treestoreiter, 0)
       self.treestoreiterNamewithBracketVsParentNode[treestoreiterNamewithBracket] = node.parent
+      # TODO:: both of these reverse mappings from name(bracket) seem to be erroneous to this corner case
+      # case in treeview: root>Sportsand Outdoors>Accessories shows Tires and Wheels as parent of Accessories(17), 
+      # possibly two got added against <Accessories(17), > and latest one was Tires and Wheels
       self.treestoreiterNamewithBracketVsNode[treestoreiterNamewithBracket] = node
 
     self.current_filter_language = None
