@@ -37,7 +37,7 @@ class TreeViewFilterWindow(Gtk.Window):
     parents[None] = None
     self.treestoreiterNamewithBracketVsParentNode[None] = None
     self.treestoreiterNamewithBracketVsNode[None] = None
-    isadf = 0
+    
     for node in allNodes:
       numChildren = ""
       if len(node.children) > 0:
@@ -53,12 +53,6 @@ class TreeViewFilterWindow(Gtk.Window):
       treestoreiterNamewithBracket = self.treestore.get_value(treestoreiter, 0)
       self.treestoreiterNamewithBracketVsParentNode[treestoreiterNamewithBracket] = node.parent
       self.treestoreiterNamewithBracketVsNode[treestoreiterNamewithBracket] = node
-      
-      if isadf == 0 or isadf == 1 or isadf == 2:
-        print("hello")
-        print(treestoreiter)
-        print(self.treestore.get_value(treestoreiter, 0))
-        isadf = isadf + 1
 
     self.current_filter_language = None
 
@@ -154,7 +148,7 @@ class TreeViewFilterWindow(Gtk.Window):
     print(presentNode)
     # node fetched
     # let's populate detailed view based on this node - getter methods for this node is in tree.py
-
+    # TODO: start here
 
 
     # we update the filter, which updates in turn the view
