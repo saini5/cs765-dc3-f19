@@ -30,7 +30,7 @@ class TreeViewFilterWindow(Gtk.Window):
     # Creating the TreeStore model
     self.treestore = Gtk.TreeStore(int, str, int, int, str)
 
-    nodeDict = buildNodeDict(tree)
+    self.nodeDict = buildNodeDict(tree)
     allNodes = getNodeList(tree)
     parents = {}
     self.treestoreiterNamewithBracketVsParentNode = {}
@@ -44,20 +44,14 @@ class TreeViewFilterWindow(Gtk.Window):
       if len(node.children) > 0:
         numChildren = " (" + str(len(node.children)) + ")"
       namePlusBranch = node.name + numChildren
-      alsoAncestor = alsoAncestors(nodeDict, node)
-      oneVal = list(nodeDict.values())[1]
+      alsoAncestor = alsoAncestors(self.nodeDict, node)
+      oneVal = list(self.nodeDict.values())[1]
       ancestorString = json.dumps({'x': str(oneVal)})
       attrs = [node.id, namePlusBranch, node.productCount, node.subtreeProductCount, ancestorString]
       parentId = node.parent.id if node.parent is not None else None
       parentObj = parents[parentId]
       treestoreiter = self.treestore.append(parentObj, attrs)
       parents[node.id] = treestoreiter
-      treestoreiterNamewithBracket = self.treestore.get_value(treestoreiter, 0)
-      self.treestoreiterNamewithBracketVsParentNode[treestoreiterNamewithBracket] = node.parent
-      # TODO:: both of these reverse mappings from name(bracket) seem to be erroneous to this corner case
-      # case in treeview: root>Sportsand Outdoors>Accessories shows Tires and Wheels as parent of Accessories(17),
-      # possibly two got added against <Accessories(17), > and latest one was Tires and Wheels
-      self.treestoreiterNamewithBracketVsNode[treestoreiterNamewithBracket] = node
 
     self.current_filter_language = None
 
@@ -77,14 +71,15 @@ class TreeViewFilterWindow(Gtk.Window):
     self.treeview.connect("row_activated", self.on_node_clicked)
 
     # Create the columns for the TreeView
-    cats = ["id", "Name (# subcategories)", "Product Count", "Subtree Product Count", "Alsos"]
+    cats = ["Name (# subcategories)", "Product Count", "Subtree Product Count", "Alsos"]
     for i, column_title in enumerate(cats):
       renderer = Gtk.CellRendererText()
-      column = Gtk.TreeViewColumn(column_title, renderer, text=i)
-      column.set_sort_column_id(i)
+      column = Gtk.TreeViewColumn(column_title, renderer, text=i+1)
+      column.set_sort_column_id(i+1)
       self.treeview.append_column(column)
       if i == 0:
         self.treeview.set_expander_column(column)
+        self.treeview.set_search_column(i)
 
     # setting up the layout, putting the treeview in a scrollwindow,
     # and the buttons in a row
@@ -100,13 +95,12 @@ class TreeViewFilterWindow(Gtk.Window):
     detail_view_header = Gtk.Label.new()
     detail_view_header.set_markup("<big><b>Detailed View</b></big>")
     # self.detail_grid.add(detail_view_header)
-    # self.row1 = self.build_row("hello", "my baby")
-    self.detail_grid.attach (detail_view_header, 0, 0, 1, 1)
+    self.detail_grid.attach(detail_view_header, 0, 0, 1, 1)
 
-    label_annotation = Gtk.Label("Annotation")
+    label_annotation = Gtk.Label.new("Annotation")
     self.detail_grid.attach(label_annotation, 0, 1, 1, 1)
 
-    value_annotation = Gtk.Label("Value")
+    value_annotation = Gtk.Label.new("Value")
     self.detail_grid.attach(value_annotation, 1, 1, 1, 1)
 
     # self.row2 = self.build_row("yo", "baby")
@@ -135,13 +129,12 @@ class TreeViewFilterWindow(Gtk.Window):
     print(tree_view.get_model())
     tree_model = tree_view.get_model()
     tree_iter = tree_model.get_iter_from_string(path.to_string())
-    # print(tree_iter)
-    treeIterNameWithBracket = tree_model.get_value(tree_iter, 0)
-    print(treeIterNameWithBracket)
-    presentNodeParent = self.treestoreiterNamewithBracketVsParentNode[treeIterNameWithBracket]
-    print(presentNodeParent)
-    presentNode = self.treestoreiterNamewithBracketVsNode[treeIterNameWithBracket]
+    id = tree_model.get_value(tree_iter, 0)  # Hidden column 0
+
+    presentNode = self.nodeDict[id]
     print(presentNode)
+    presentNodeParent = presentNode.parent
+    print(presentNodeParent)
     # node fetched
     # let's populate detailed view based on this node - getter methods for this node is in tree.py
     # TODO: start here
@@ -149,7 +142,7 @@ class TreeViewFilterWindow(Gtk.Window):
 
     # we update the filter, which updates in turn the view
     self.language_filter.refilter()
-  
+
   def language_filter_func(self, model, iter, data):
     """Tests if the language in the row is the one in the filter"""
     if (self.current_filter_language is None
@@ -157,15 +150,6 @@ class TreeViewFilterWindow(Gtk.Window):
       return True
     else:
       return model[iter][2] == self.current_filter_language
-
-  def on_selection_button_clicked(self, tree_view, path, column):
-    """Called on any of the button clicks"""
-    # we set the current language filter to the button's label
-    print("HELLO THERE")
-    # self.current_filter_language = widget.get_label()
-    print("%s language selected!" % self.current_filter_language)
-    # we update the filter, which updates in turn the view
-    self.language_filter.refilter()
 
   def compare(self, model, row1, row2, user_data):
     sort_column, _ = model.get_sort_column_id()
@@ -181,17 +165,6 @@ class TreeViewFilterWindow(Gtk.Window):
         return 0
     else:
         return 1
-
-  def build_row(self, left_text, right_text):
-    row = Gtk.Box(spacing=10)
-    row.set_homogeneous(False)
-
-    left = Gtk.Label.new(left_text)
-    right = Gtk.Label.new(right_text)
-    row.pack_start(left, True, True, 0)
-    row.pack_start(right, True, True, 0)
-
-    return row
 
 
 set_gtk_style("treeview.css")  # Load the css file
