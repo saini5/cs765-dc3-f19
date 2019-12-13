@@ -101,7 +101,7 @@ class TreeViewFilterWindow(Gtk.Window):
     self.paned.add1(self.scrollable_treelist)
     self.scrollable_treelist.add(self.treeview)
 
-    # TODO: Add the data rows & track the right-labels for editting
+    # TODO: Add the data rows & track the right-labels for editing
     # on selection
     detail_view_header = Gtk.Label.new()
     detail_view_header.set_markup("<big><b>Detailed View</b></big>")
