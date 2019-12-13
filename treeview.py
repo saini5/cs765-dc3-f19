@@ -2,8 +2,9 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import pickle
-from tree import getNodeList
+from tree import getNodeList, alsoAncestors, buildNodeDict
 from gtkcss import set_gtk_style
+import json
 
 file = open('tree-all.pickle', 'rb')
 tree = pickle.load(file)
@@ -27,8 +28,9 @@ class TreeViewFilterWindow(Gtk.Window):
     self.paned.add2(self.detail_list)
 
     # Creating the TreeStore model
-    self.treestore = Gtk.TreeStore(str, int, int)
+    self.treestore = Gtk.TreeStore(str, int, int, str)
 
+    nodeDict = buildNodeDict(tree)
     allNodes = getNodeList(tree)
     parents = {}
     parents[None] = None
@@ -40,11 +42,12 @@ class TreeViewFilterWindow(Gtk.Window):
       if len(node.children) > 0:
         numChildren = " (" + str(len(node.children)) + ")"
       namePlusBranch = node.name + numChildren
-      attrs = [namePlusBranch, node.productCount, node.subtreeProductCount]
+      alsoAncestor = alsoAncestors(nodeDict, node)
+      oneVal = list(nodeDict.values())[1]
+      # print(oneVal)
+      ancestorString = json.dumps({'x': str(oneVal)})
+      attrs = [namePlusBranch, node.productCount, node.subtreeProductCount, ancestorString]
       parentObj = parents[parentName]
-      # print(node.path)
-      # print(node.name)
-      # print(node.productCount)
       parents[node.name] = self.treestore.append(parentObj, attrs)
 
     self.current_filter_language = None
@@ -65,7 +68,7 @@ class TreeViewFilterWindow(Gtk.Window):
     self.treeview.connect("row_activated", self.on_selection_button_clicked)
 
     # Create the columns for the TreeView
-    cats = ["Name (# subcategories)", "Product Count", "Subtree Product Count"]
+    cats = ["Name (# subcategories)", "Product Count", "Subtree Product Count", "Alsos"]
     for i, column_title in enumerate(cats):
       renderer = Gtk.CellRendererText()
       column = Gtk.TreeViewColumn(column_title, renderer, text=i)
@@ -124,8 +127,8 @@ class TreeViewFilterWindow(Gtk.Window):
     value1 = model.get_value(row1, sort_column)
     value2 = model.get_value(row2, sort_column)
     if isinstance(value1, int):
-      value1 = int(value1)
-      value2 = int(value2)
+      value1 = -1 * int(value1)
+      value2 = -1 * int(value2)
 
     if value1 < value2:
         return -1

@@ -52,6 +52,36 @@ class Node:
     def __repr__(self):
         return "<{}:{}:{}>".format(self.id,self.name,len(self.children))
 
+def buildNodeDict(root:Node):
+    nodes = getNodeList(root)
+    nodeDict = {}
+    for node in nodes:
+        if node.id in nodeDict:
+            print('ERROR, DUPLICATES')
+            print(node)
+        nodeDict[node.id] = node
+
+    return nodeDict
+
+def alsoAncestors(nodeDict:dict, node:Node):
+    alsoStuff = {}
+    nodePath = node.path
+    for alsoId in list(node.also):
+        if alsoId not in alsoStuff:
+            alsoStuff[alsoId] = {}
+            also = nodeDict[alsoId]
+            alsoPath = also.path
+            lastIndex = 0
+            for i, item in enumerate(nodePath):
+                if i < len(alsoPath):
+                    if item == alsoPath[i]:
+                        lastIndex = i
+
+            alsoStuff[alsoId]['name'] = also.name
+            alsoStuff[alsoId]['lca'] = alsoPath[lastIndex]
+            alsoStuff[alsoId]['distance'] = lastIndex
+
+    return alsoStuff
 
 def getNode(root:Node, nodes:List[Node], cat:List[str]):
     """
