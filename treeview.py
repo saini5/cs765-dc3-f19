@@ -26,6 +26,8 @@ class TreeViewFilterWindow(Gtk.Window):
     self.add(self.paned)
 
     self.detail_grid = Gtk.Grid()
+    self.detail_grid.set_row_spacing(15)
+    self.detail_grid.set_column_spacing(15)
 
     # Creating the TreeStore model
     self.treestore = Gtk.TreeStore(int, str, int, int, str)
@@ -92,20 +94,38 @@ class TreeViewFilterWindow(Gtk.Window):
 
     # TODO: Add the data rows & track the right-labels for editing
     # on selection
+    empty_placeholder = Gtk.Label("")
+    self.detail_grid.attach(empty_placeholder, 0,0,1,1)
     detail_view_header = Gtk.Label.new()
     detail_view_header.set_markup("<big><b>Detailed View</b></big>")
+    detail_view_header.set_justify(Gtk.Justification.LEFT)
     # self.detail_grid.add(detail_view_header)
-    self.detail_grid.attach(detail_view_header, 0, 0, 1, 1)
+    self.detail_grid.attach(detail_view_header, 1, 1, 1, 1)
 
     label_annotation = Gtk.Label.new("Annotation")
-    self.detail_grid.attach(label_annotation, 0, 1, 1, 1)
+    self.detail_grid.attach(label_annotation, 1, 2, 1, 1)
 
     value_annotation = Gtk.Label.new("Value")
-    self.detail_grid.attach(value_annotation, 1, 1, 1, 1)
+    self.detail_grid.attach(value_annotation, 2, 2, 1, 1)
 
+    # populate the annotations column
+    name_annotation = Gtk.Label.new("Name")
+    product_count_annotation = Gtk.Label.new("Product Count")
+    # name_annotation = Gtk.Label.new("Name")
+    # name_annotation = Gtk.Label.new("Name")
+    # name_annotation = Gtk.Label.new("Name")
+    # name_annotation = Gtk.Label.new("Name")
+    # name_annotation = Gtk.Label.new("Name")
+
+    self.detail_grid.attach(name_annotation, 1, 3, 1, 1)
+    self.detail_grid.attach(product_count_annotation, 1, 4, 1, 1)
     # self.row2 = self.build_row("yo", "baby")
 
     self.paned.add2(self.detail_grid)
+
+    # initializing the Value rows
+    self.name_value = None
+    self.product_count_value = None
 
     # self.treeview.expand_all() # Uncomment to expand the tree initially
     self.show_all()
@@ -138,7 +158,19 @@ class TreeViewFilterWindow(Gtk.Window):
     # node fetched
     # let's populate detailed view based on this node - getter methods for this node is in tree.py
     # TODO: start here
+    if self.name_value is not None:
+      self.name_value.destroy()
+    self.name_value = Gtk.Label.new(presentNode.name)
+    self.detail_grid.attach(self.name_value, 2, 3, 1, 1)
 
+    if self.product_count_value is not None:
+      self.product_count_value.destroy()
+    self.product_count_value = Gtk.Label.new(str(presentNode.productCount))
+    self.detail_grid.attach(self.product_count_value, 2, 4, 1, 1)
+    # product_count_value = Gtk.Label.new(presentNode.productCount.to_string())
+    # self.detail_grid.attach(product_count_value, 1, 3, 1, 1)
+    self.paned.add2(self.detail_grid)
+    self.show_all()
 
     # we update the filter, which updates in turn the view
     self.language_filter.refilter()
