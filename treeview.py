@@ -4,7 +4,6 @@ from gi.repository import Gtk
 import pickle
 from tree import getNodeList, alsoAncestors, buildNodeDict
 from gtkcss import set_gtk_style
-import json
 
 file = open('tree-all.pickle', 'rb')
 tree = pickle.load(file)
@@ -13,7 +12,7 @@ tree = pickle.load(file)
 class TreeViewFilterWindow(Gtk.Window):
 
   def __init__(self):
-    Gtk.Window.__init__(self, title="Treeview Filter Demo")
+    Gtk.Window.__init__(self, title="Amazon Product Categories")
     self.set_border_width(10)
     self.maximize()
 
@@ -29,7 +28,7 @@ class TreeViewFilterWindow(Gtk.Window):
     self.detail_grid.set_border_width(10)
 
     # Creating the TreeStore model
-    self.treestore = Gtk.TreeStore(int, str, int, int, str)
+    self.treestore = Gtk.TreeStore(int, str, int, int)
 
     self.nodeDict = buildNodeDict(tree)
     allNodes = getNodeList(tree)
@@ -41,12 +40,8 @@ class TreeViewFilterWindow(Gtk.Window):
       if len(node.children) > 0:
         numChildren = " (" + str(len(node.children)) + ")"
       namePlusBranch = node.name + numChildren
-      alsoAncestor = alsoAncestors(self.nodeDict, node)
-      alsoList = list(alsoAncestor.values())
-      oneVal = alsoList[0] if len(alsoList) > 0 else "NONE"
-      ancestorString = json.dumps({'x': str(oneVal)})
       attrs = [node.id, namePlusBranch, node.productCount,
-               node.subtreeProductCount, ancestorString]
+               node.subtreeProductCount]
       parentId = node.parent.id if node.parent is not None else None
       parentObj = parents[parentId]
       treestoreiter = self.treestore.append(parentObj, attrs)
@@ -71,7 +66,7 @@ class TreeViewFilterWindow(Gtk.Window):
 
     # Create the columns for the TreeView
     cats = ["Name (# subcategories)", "Product Count",
-            "Subtree Product Count", "Alsos"]
+            "Subtree Product Count"]
     for i, column_title in enumerate(cats):
       renderer = Gtk.CellRendererText()
       column = Gtk.TreeViewColumn(column_title, renderer, text=i + 1)
@@ -79,7 +74,7 @@ class TreeViewFilterWindow(Gtk.Window):
       self.treeview.append_column(column)
       if i == 0:
         self.treeview.set_expander_column(column)
-        self.treeview.set_search_column(i)
+        self.treeview.set_search_column(i + 1)
 
     # setting up the layout, putting the treeview in a scrollwindow,
     # and the buttons in a row
@@ -159,13 +154,32 @@ class TreeViewFilterWindow(Gtk.Window):
                                     subtree_product_count_annotation,
                                     Gtk.PositionType.RIGHT, 1, 1)
 
+    # Declare the alsos
+    also_header = Gtk.Label.new()
+    also_header.set_markup("<b>Analysis of Alsos</b>")
+    also_header = self.frame_wrap(also_header)
+    self.detail_grid.attach_next_to(also_header,
+                                    subtree_product_count_annotation,
+                                    Gtk.PositionType.BOTTOM, 2, 2)
+    self.also_grid = Gtk.Grid.new()
+    self.also_grid.set_row_spacing(0)
+    self.also_grid.set_column_spacing(0)
+    self.also_grid.set_border_width(0)
+    self.scrolling_also_grid = Gtk.ScrolledWindow()
+    self.scrolling_also_grid.set_vexpand(True)
+    self.scrolling_also_grid.set_hexpand(True)
+    self.scrolling_also_grid.add(self.also_grid)
+    self.detail_grid.attach_next_to(self.frame_wrap(self.scrolling_also_grid),
+                                    also_header,
+                                    Gtk.PositionType.BOTTOM, 2, 2)
+
     self.paned.add2(self.detail_grid)
 
     # self.treeview.expand_all() # Uncomment to expand the tree initially
     self.show_all()
 
   def frame(self, text):
-    return self.frame_wrap(Gtk.Label.new(text))
+    return self.frame_wrap(Gtk.Label.new(str(text)))
 
   def frame_wrap(self, elem):
     frame = Gtk.Frame.new()
@@ -187,16 +201,56 @@ class TreeViewFilterWindow(Gtk.Window):
     self.name_value.get_child().set_text(presentNode.name)
     self.path_value.get_child().set_text(str(presentNode.path))
     product = presentNode.exampleProduct
+    if product is None or "title" not in product:
+      product = {"title": ""}
+
     self.example_product_value.get_child().set_text(product['title'])
 
     self.product_count_value.get_child().set_text(
         str(presentNode.productCount))
     self.subtree_product_count_value.get_child().set_text(
         str(presentNode.subtreeProductCount))
-    # self.show_all()
 
+    # Alsos!
+    alsoAncestor = alsoAncestors(self.nodeDict, presentNode)
+    alsoList = list(alsoAncestor.values())
+    self.build_also_grid(alsoList)
+
+    self.show_all()
     # we update the filter, which updates in turn the view
     self.language_filter.refilter()
+
+  def build_also_grid(self, alsos):
+    # Remove all the old rows...
+    for i in range(300):
+      self.also_grid.remove_row(0)
+    also_name = self.frame("Also Name")
+    self.also_grid.attach(also_name, 0, 0, 1, 1)
+    also_lca = self.frame("LCA")
+    self.also_grid.attach(also_lca, 1, 0, 1, 1)
+    also_distance = self.frame("Node Distance")
+    self.also_grid.attach(also_distance, 2, 0, 1, 1)
+    also_also_distance = self.frame("Also Distance")
+    self.also_grid.attach(also_also_distance, 3, 0, 1, 1)
+
+    def also_row(previous, also):
+      also_name = self.frame(also['name'])
+      self.also_grid.attach_next_to(also_name, previous,
+                                    Gtk.PositionType.BOTTOM, 1, 1)
+      also_lca = self.frame(also['lca'])
+      self.also_grid.attach_next_to(also_lca, also_name,
+                                    Gtk.PositionType.RIGHT, 1, 1)
+      also_distance = self.frame(also['distance'])
+      self.also_grid.attach_next_to(also_distance, also_lca,
+                                    Gtk.PositionType.RIGHT, 1, 1)
+      also_also_distance = self.frame(also['alsoDistance'])
+      self.also_grid.attach_next_to(also_also_distance, also_distance,
+                                    Gtk.PositionType.RIGHT, 1, 1)
+      return also_name
+
+    previous = also_name
+    for also in alsos:
+      previous = also_row(previous, also)
 
   def language_filter_func(self, model, iter, data):
     """Tests if the language in the row is the one in the filter"""

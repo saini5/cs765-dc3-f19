@@ -76,11 +76,21 @@ def alsoAncestors(nodeDict:dict, node:Node):
                 if i < len(alsoPath):
                     if item == alsoPath[i]:
                         lastIndex = i
+                    else:
+                        break
+                else:
+                    break
+
+            # Root!
+            if lastIndex == 0 and nodePath[0] != alsoPath[0]:
+                lastIndex = -1
+                alsoStuff[alsoId]['lca'] = 'root'
+            else:
+                alsoStuff[alsoId]['lca'] = alsoPath[lastIndex]
 
             alsoStuff[alsoId]['name'] = also.name
-            alsoStuff[alsoId]['lca'] = alsoPath[lastIndex]
-            alsoStuff[alsoId]['alsoDistance'] = len(alsoPath) - lastIndex
-            alsoStuff[alsoId]['distance'] = len(nodePath) - lastIndex
+            alsoStuff[alsoId]['alsoDistance'] = len(alsoPath) - lastIndex - 1
+            alsoStuff[alsoId]['distance'] = len(nodePath) - lastIndex - 1
 
     return alsoStuff
 
