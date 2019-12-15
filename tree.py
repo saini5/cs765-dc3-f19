@@ -79,7 +79,8 @@ def alsoAncestors(nodeDict:dict, node:Node):
 
             alsoStuff[alsoId]['name'] = also.name
             alsoStuff[alsoId]['lca'] = alsoPath[lastIndex]
-            alsoStuff[alsoId]['distance'] = lastIndex
+            alsoStuff[alsoId]['alsoDistance'] = len(alsoPath) - lastIndex
+            alsoStuff[alsoId]['distance'] = len(nodePath) - lastIndex
 
     return alsoStuff
 

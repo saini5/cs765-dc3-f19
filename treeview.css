@@ -22,6 +22,30 @@ treeview.view {
   -gtk-icon-source: url("minus.png");
   /* -gtk-icon-source: url("Caret-checked.png"); */
 }
+grid {
+  /* background-color: #bbb; */
+}
+grid label {
+  font-size: 1.5em;
+}
+grid frame {
+  /* background-color: green; */
+  border-width: 1px 0px 0px 1px;
+  /* margin: 10px 10px 10px 10px; /1* padding? *1/ */
+}
+grid frame:nth-child(odd) {
+  background-color: #bbb;
+  border-width: 1px 0px 1px 1px;
+}
+grid frame:nth-child(even) {
+  background-color: #fff;
+  border-width: 1px 1px 0px 1px;
+}
+frame border {
+  border-style: solid;
+  border-radius: 0;
+  padding: 20px;
+}
 button {
   color: black;
   background-color: #bbb;
