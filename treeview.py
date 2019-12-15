@@ -125,11 +125,22 @@ class TreeViewFilterWindow(Gtk.Window):
     self.detail_grid.attach_next_to(self.path_value, path_annotation,
                                     Gtk.PositionType.RIGHT, 1, 1)
 
+    example_product_annotation = Gtk.Label.new("Example Product")
+    example_product_annotation.set_justify(Gtk.Justification.LEFT)
+    example_product_annotation = self.frame_wrap(example_product_annotation)
+    self.detail_grid.attach_next_to(example_product_annotation,
+                                    path_annotation,
+                                    Gtk.PositionType.BOTTOM, 1, 1)
+    self.example_product_value = self.frame("")
+    self.detail_grid.attach_next_to(self.example_product_value,
+                                    example_product_annotation,
+                                    Gtk.PositionType.RIGHT, 1, 1)
+
     product_count_annotation = Gtk.Label.new("Product Count")
     product_count_annotation.set_justify(Gtk.Justification.LEFT)
     product_count_annotation = self.frame_wrap(product_count_annotation)
     self.detail_grid.attach_next_to(product_count_annotation,
-                                    path_annotation,
+                                    example_product_annotation,
                                     Gtk.PositionType.BOTTOM, 1, 1)
     self.product_count_value = self.frame("")
     self.detail_grid.attach_next_to(self.product_count_value,
@@ -175,6 +186,8 @@ class TreeViewFilterWindow(Gtk.Window):
     # getter methods for this node is in tree.py
     self.name_value.get_child().set_text(presentNode.name)
     self.path_value.get_child().set_text(str(presentNode.path))
+    product = presentNode.exampleProduct
+    self.example_product_value.get_child().set_text(product['title'])
 
     self.product_count_value.get_child().set_text(
         str(presentNode.productCount))
